@@ -6,6 +6,6 @@
     "types": ["node"],
     "outDir": "dist",
     "rootDir": "src",
-    "allowJs": false
+    "allowJs": false,
   }
 }

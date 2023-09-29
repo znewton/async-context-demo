@@ -3,5 +3,6 @@
  * Licensed under the MIT License.
  */
 
+export * from './asyncLocalStorage';
 export * from './timeoutContext';
 export * from './telemetryContext';

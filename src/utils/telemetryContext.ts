@@ -4,6 +4,7 @@
  */
 
 import type { globalThis } from '../types/global';
+import { AsyncLocalStorageContextProvider } from './asyncContext';
 
 export enum BaseTelemetryProperties {
   tenantId = 'tenantId',
@@ -59,6 +60,38 @@ export class NullTelemetryContext implements ITelemetryContext {
   }
 }
 const nullTelemetryContext = new NullTelemetryContext();
+
+/**
+ * AsyncLocalStorage based TelemetryContext implementation.
+ * Callbacks are executed within an AsyncContext containing telemetry properties.
+ */
+export class AsyncLocalStorageTelemetryContext implements ITelemetryContext {
+  private readonly contextProvider = new AsyncLocalStorageContextProvider<
+    Partial<ITelemetryContextProperties>
+  >();
+
+  public getProperties(): Partial<ITelemetryContextProperties> {
+    return this.contextProvider.getContext() ?? {};
+  }
+
+  public bindProperties(
+    props: Partial<ITelemetryContextProperties>,
+    callback: () => void
+  ): void {
+    this.contextProvider.bindContext(props, () => callback());
+  }
+
+  public async bindPropertiesAsync<T>(
+    props: Partial<ITelemetryContextProperties>,
+    callback: () => Promise<T>
+  ): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.contextProvider.bindContext(props, () => {
+        callback().then(resolve).catch(reject);
+      });
+    });
+  }
+}
 
 const _global = global as unknown as typeof globalThis;
 
